@@ -8,6 +8,7 @@ from business_logic.schemas import StationMetadataModel
 
 logger = logging.getLogger(__name__)
 
+''' fetch_ftp related methods '''
 
 def fetch_noaa_ftp_data(start:int, end:int, dir_path:pathlib.Path, csv_filepath:pathlib.Path) -> None: 
     ''' access noaa's ftp server and write to memory all years for each station from start to end  
@@ -66,3 +67,17 @@ def _fetch_files(ftp_server:str, ftp_dir:str, file_name:str, dir_path:pathlib.Pa
         except ftplib.error_perm:
                 logger.error(f'{file_name} not found')
         ftp.quit()
+
+''' cleaning_isd related methods '''
+
+def rm_0_byte_files_from(dir:pathlib.Path) -> None: 
+    ''' iterates through a given dir and removes 0 byte files
+        Args:
+            dir: dir path of interest 
+        Returns:
+            None
+    '''
+    for file_path in dir.iterdir():
+        file_size = file_path.stat().st_size
+        if file_size == 0:
+            file_path.unlink()

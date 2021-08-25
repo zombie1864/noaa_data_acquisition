@@ -4,34 +4,21 @@ import os
 from typing import Any, Dict, List, TypeVar 
 import pydantic 
 from business_logic.schemas import WeatherStationRecord
+from business_logic.utils_IO_bound import rm_0_byte_files_from
 
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 raw_dir = pathlib.Path(this_dir) / 'business_logic' / 'project_data' / 'raw' 
 
 
-def rm_0_byte_files_from(dir:pathlib.Path) -> None:
-    ''' iterates through a given dir and removes 0 byte files
+PydanticModel = TypeVar('PydanticModel', bound=pydantic.BaseModel)
+
+def _isd_parser_for(file_content:List[bytes]) -> List[PydanticModel]: #NOTE data_manipulation 
+    ''' takes a list of line data from a gz file and converts into list of pydantic model 
         Args:
-            dir: dir path of interest 
+            file_content: list of bytes data in a given gz file 
         Returns:
-            None
-    '''
-    for file_path in dir.iterdir():
-        file_size = file_path.stat().st_size
-        if file_size == 0:
-            file_path.unlink()
-
-
-TPydanticModel = TypeVar('TPydanticModel', bound=pydantic.BaseModel)
-
-def _isd_parser_for(file_content:bytes) -> List[TPydanticModel]:
-    ''' takes a line data from a gz file and converts a single line data into pydantic model 
-    NOTE this should return a just a pydantic inst 
-        Args:
-            
-        Returns:
-            
+            list of pydantic models 
     '''
     list_of_inst_models = []
     for line_data in file_content[:-1]:
@@ -51,28 +38,24 @@ def _isd_parser_for(file_content:bytes) -> List[TPydanticModel]:
     return list_of_inst_models
 
 
-def file_aggregation_for(dir:pathlib.Path) -> List[TPydanticModel]:#NOTE fix this later 
+def weather_station_yealy_data(dir:pathlib.Path) -> List[List[PydanticModel]]:#NOTE IO_bound
     ''' 
         Args:
             
         Returns:
             
     '''
-    hard_coded_path = pathlib.Path(this_dir) / 'business_logic' / 'project_data' / 'raw' / '720304-64752-2016.gz'
-    # for file_path in dir.iterdir():
-    #     with gzip.open(file_path,'rb') as output:
-    #         file_content_per_line = output.read() #NOTE BUG your are not passing the file content properly 
-    #         ''' here is an idea pass it a hard coded file_path a single gs file and see what you get  '''
-    #         tmp_record = _isd_parser_for(file_content_per_line)
-    with gzip.open(hard_coded_path, 'rb') as output:
-        file_content = output.read()
-        tmp_record = _isd_parser_for(file_content.split(b'\n')) 
+    list_of_weather_station_yearly_data = []
+    for file_path in dir.iterdir():
+        with gzip.open(file_path,'rb') as output:
+            file_content = output.read()
+            list_of_inst_models = _isd_parser_for(file_content.split(b'\n'))
+            list_of_weather_station_yearly_data.append(list_of_inst_models)
 
 
 def main():
     rm_0_byte_files_from(raw_dir)
-    ## - list_of_monthly_aggregated_data = file_aggregation_for(raw_dir)
-    file_aggregation_for(raw_dir)
+    list_of_weather_station_yearly_data = weather_station_yealy_data(raw_dir)
 
 
 if __name__ == '__main__': 
@@ -82,28 +65,11 @@ if __name__ == '__main__':
 '''  
     NOTE WED-11:50AM - steps to cleaning ISD data 
 
-        - 
-
         - [goal] list_of_monthly_aggregated_data = file_aggregation_for(raw:Any) -> monthly_aggregated_data
         
-        - [1] for a given file open with gzip lib [opening it will cause you to itr thr the file]
-            ⮑ read each line and form an tmp_record 
-                >>> to gap the brdg i need to parse the isd line data
-                ⮑ tmp_record = {
-                        'usaf': usaf 
-                        'wban': wban 
-                        'date': date 
-                        'lat': lat 
-                        'lon': lon 
-                        'air_temp': air_temp 
-                        'sea_lvl_P': sea_lvl_P
-                        'dew_point_temp': dew_point_temp 
-                    }
-                        ⮑ convert this tmp_record into a pydantic model 
-                            ⮑ should make it easier to handle the date 
         
-        - [2] pass tmp_record to data_aggregation_for(tmp_record) -> monthly_aggregated_data:List[TPydanticModel]
-            ⮑ data_aggregation_for(tmp_record:TPydanticModel) -> List[TPydanticModel]
+        - [2] pass list_of_inst_models to data_aggregation_for(list_of_inst_models) -> monthly_aggregated_data:List[PydanticModel]
+            ⮑ data_aggregation_for(list_of_inst_models:List[PydanticModel]) -> List[PydanticModel]
                 - creates a list holding a station's monthly data 
                     ⮑ [
                         station_1_jan_2016, 
