@@ -1,33 +1,11 @@
-""" 
+'''  
 One of the nice things about python is that a class is in and of itself an object. We can leverage 
 this to create modularity in our library code. 
-This module should implement Reader and Writer interfaces for both json and csv files that 
-should be designed to work specifically with pydantic model classes. 
-By using pydantic here we can lean on the some of that libraries features such as built in validation and (de)serialization.
-You should end up with 4 concrete subclasses: 
-    - JsonReader 
-    - JsonWriter 
-    - CsvReader 
-    - CsvWriter 
-OR as an alternative you can use multiple inheritance in order to end up with 2 concrete subclasses: 
-    - JsonReaderWriter 
-    - CsvReaderWriter 
-    
-These classes should be used in the exercises and applications in this module and be able to work with 
-any type of valid data. All exercises and applications will be concerned with writing in lists or groups of 
-data so these two read and write ops will suffice.
 This method of API building is an example of what's called the Interface Segregation Principle. Basically 
 this states that you should strive to create small abstract interfaces with very narrow functionality to increase 
 flexibility. 
-You should almost universally use `with` statements to handle your file I/O! This assures that if an exception happens 
-during read/write that the file handle gets closed.
-"""
-
-'''  
-fileio
-
-both writer interfaces are not actual using the specified pydantic model types nor are types being checked.
 '''
+
 
 import pydantic
 import abc 
@@ -37,10 +15,7 @@ import csv
 from typing import List, Type, TypeVar
 
 
-# This funny business declares a custom type to use with our interface. It basically 
-# says the parameter takes a *class* that is a subclass of pydantic.BaseModel not an instance of a 
-# subclass of pydantic.BaseModel
-TPydanticModel = TypeVar('TPydanticModel', bound=pydantic.BaseModel)
+TPydanticModel = TypeVar('TPydanticModel', bound=pydantic.BaseModel) #declares a custom type to use with our interface
 
 
 class PydanticReader(abc.ABC): 

@@ -1,7 +1,7 @@
 import pytest 
 import pydantic 
-from module_three.schemas import format_str_to_datetime
-from module_three.utils_data_manipulation import format_wban
+from business_logic.schemas import format_str_to_datetime
+from business_logic.utils_data_manipulation import format_wban
 
 @pytest.fixture
 def mock_csv_data():

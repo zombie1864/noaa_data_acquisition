@@ -29,3 +29,15 @@ class StationMetadataModel(pydantic.BaseModel):
     begin_validation = pydantic.validator('BEGIN', allow_reuse=True)(format_str_to_datetime)
     end_validation = pydantic.validator('END', allow_reuse=True)(format_str_to_datetime)
 
+
+class WeatherStationRecord(pydantic.BaseModel):
+    ''' schema for intermediate record building '''
+    usaf: str
+    wban: str
+    date: str
+    lat: str
+    lon: str
+    air_temp: str
+    sea_lvl_P: str
+    dew_point_temp: str
+    date_validation = pydantic.validator('date', allow_reuse=True)(format_str_to_datetime)

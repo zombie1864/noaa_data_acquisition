@@ -2,9 +2,6 @@
 .pytest_cache/
 *.json
 !fixtures/*.json
-!module_one/tests/data/*.json
-
-module_two/project_data
 
 !tempCodeRunnerFile.py
 
