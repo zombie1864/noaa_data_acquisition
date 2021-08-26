@@ -84,25 +84,32 @@ def rm_0_byte_files_from(dir:pathlib.Path) -> None:
         if file_size == 0:
             file_path.unlink()
 
-def num_of_files_in(dir:pathlib.Path) -> int:#NOTE ADD DOC STR 
+def num_of_files_in(dir:pathlib.Path) -> int:
+    ''' returns an int representing the number of files inside a given dir 
+        Args:
+            dir: the path to a directory
+        Returns:
+            the number of files inside a dir
+    '''
     return len([files for files in os.listdir(dir) if os.path.isfile(os.path.join(dir, files))])
 
 
-def retreive_file_content_from(dir:pathlib.Path) -> Any:#NOTE UPDATE DOCS
-    ''' retreives a years worth of data for each weather station in a dir 
+def retreive_file_content_from(dir:pathlib.Path) -> Tuple[Any]:
+    ''' iterates through a dir and retreives each files content as a list of bytes and stores files content inside a py dict 
         Args:
-            dir: the dir path to a years worth of data for a given weather station 
+            dir: the dir path containing either a single or multiple files  
         Returns:
-            list of file content, file content are list of bytes representing line data for a given weather station 
+            tuple containing the number of files in a given dir and the dir_content_dict containing file_name as key and the file number with the content of a .gz file as a tuple value 
     '''
     file_num = 1 
-    file_content_dict = {}
-    this_dir = os.path.dirname(os.path.realpath(__file__))
-    raw_dir = pathlib.Path(this_dir) / 'project_data' / 'raw' 
-    num_of_files = num_of_files_in(raw_dir)
+    dir_content_dict = {}
+    num_of_files = num_of_files_in(dir)
     for file_path in dir.iterdir():
         with gzip.open(file_path,'rb') as file_content:
             file_name = str(file_path)[-20:]
-            file_content_dict[file_name] = {'file_content': (str(file_num),file_content.read().split(b'\n'))}
+            dir_content_dict[file_name] = (str(file_num),file_content.read().split(b'\n'))
         file_num += 1 
-    return (num_of_files, file_content_dict)
+    return (num_of_files, dir_content_dict)
+'''  
+    (int, Dict[file_name,Tuple[file_num, file_content]])
+'''

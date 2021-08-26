@@ -1,7 +1,7 @@
 import os
 import pathlib
 from business_logic.utils_IO_bound import rm_0_byte_files_from, retreive_file_content_from
-from business_logic.utils_data_manipulation import weather_station_yealy_data
+from business_logic.utils_data_manipulation import isd_data_parser
 
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
@@ -11,8 +11,8 @@ raw_dir = pathlib.Path(this_dir) / 'business_logic' / 'project_data' / 'raw'
 ''' this script only contains application logic '''
 def main():
     rm_0_byte_files_from(raw_dir) 
-    num_of_files, file_content_dict = retreive_file_content_from(raw_dir) #NOTE slower maybe list comprehension 
-    list_of_weather_station_yearly_data = weather_station_yealy_data(num_of_files, file_content_dict) #NOTE very slow 
+    num_of_files, dir_content_dict = retreive_file_content_from(raw_dir)
+    weather_station_matrix_data = isd_data_parser(num_of_files, dir_content_dict) 
 
 if __name__ == '__main__': 
     main() 
@@ -20,21 +20,7 @@ if __name__ == '__main__':
 
 
 '''  
-    NOTE WED-11:50AM - steps to cleaning ISD data 
-
-        - [goal] list_of_monthly_aggregated_data = file_aggregation_for(raw:Any) -> monthly_aggregated_data
-        
-        
-        - [2] pass list_of_inst_models to data_aggregation_for(list_of_inst_models) -> monthly_aggregated_data:List[PydanticModel]
-            ⮑ data_aggregation_for(list_of_inst_models:List[PydanticModel]) -> List[PydanticModel]
-                - creates a list holding a station's monthly data 
-                    ⮑ [
-                        station_1_jan_2016, 
-                        station_1_feb_2016, 
-                        ...
-                        station_1_dec_2016
-                    ]
-                    >>> NOTE BUG what exactly is being "averaged"
+    NOTE THU-3:00PM - steps to cleaning ISD data 
         
         - [3] monthly_aggregated_data will be saved to a list_of_monthly_aggregated_data 
             ⮑ [

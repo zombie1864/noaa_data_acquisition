@@ -1,5 +1,5 @@
 import pydantic 
-from typing import Dict, List, Tuple, TypeVar
+from typing import Any, Dict, List, Tuple, TypeVar
 from business_logic.schemas import WeatherStationRecord
 
 
@@ -20,27 +20,28 @@ def weather_stations_by(start:int, end:int, list_of_models:List[PydanticModel]) 
             
 ''' cleaning_isd related methods '''
 
-def weather_station_yealy_data(num_of_files: int, file_content_dict:Dict[str,List[bytes]]) -> List[List[PydanticModel]]: #NOTE UPDATE DOCS
-    ''' 
+def isd_data_parser(num_of_files: int, dir_content_dict:Dict[str,Tuple[Any]]) -> List[List[PydanticModel]]: 
+    ''' this is a isd parser which translates noaa's isd temperature data into a pydantic model. A parser in general turns a string, binary data, etc. into a data structure. The goal is to return an n dimensional matrix containing a years worth of data as a list of pydantic inst models for a single weather station. [[weather_station_data_1], ..., [weather_station_data_n]]
         Args:
-            
+            num_of_files: the total number of files in a dir containg `.gz` files 
+            dir_content_dict: py dict containing file_name as key and tuple(file_num, file_content) where file_content is a list of bytes for a given `.gz` file 
         Returns:
-            
+            weather_station_matrix_data - List[List[PydanticModel]]
     '''
-    return [_isd_parser_for(file_name, file_content_obj, num_of_files) for file_name, file_content_obj in file_content_dict.items()]
+    return [_isd_parser_for(file_name, file_content_tuple, num_of_files) for file_name, file_content_tuple in dir_content_dict.items()]
 
 
-def _isd_parser_for(file_name:str, file_content_obj:Dict[str,Tuple[str,List[bytes]]], num_of_files:int) -> List[PydanticModel]: #NOTE UPDATE DOCS
+def _isd_parser_for(file_name:str, file_content_tuple:Tuple[str,List[bytes]], num_of_files:int) -> List[PydanticModel]: 
     ''' takes a list of line data from a gz file and converts into list of pydantic model 
         Args:
-            file_content: list of bytes data in a given gz file 
+            file_name: name of the file ex: 123-456.gz 
+            file_content_tuple: tuple containing the file_num and the content inside .gz file 
+            num_of_files: the total number of files inside the dir housing the raw .gz file data 
         Returns:
-            list of pydantic models 
-            {file_num: file_content}
+            a single weather station's year worth of data as pydantic inst models
     '''
-    list_of_dict_objs = []
-    file_num = file_content_obj['file_content'][0]
-    file_content = file_content_obj['file_content'][1]
+    year_worth_of_weather_station_data = []
+    file_num, file_content = file_content_tuple
     print(f'parsing data for {file_name} file number: {file_num} out of {num_of_files}')
     for line_data in file_content[:-1]:
         str_line_data = line_data.decode('utf-8')
@@ -54,5 +55,5 @@ def _isd_parser_for(file_name:str, file_content_obj:Dict[str,Tuple[str,List[byte
             'sea_lvl_P': str_line_data[99:104],
             'dew_point_temp': str_line_data[93:98],
         } 
-        list_of_dict_objs.append(WeatherStationRecord(**dict_obj))
-    return list_of_dict_objs
+        year_worth_of_weather_station_data.append(WeatherStationRecord(**dict_obj))
+    return year_worth_of_weather_station_data
