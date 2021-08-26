@@ -1,6 +1,17 @@
 import pydantic
 from datetime import datetime
-from business_logic.utils_data_manipulation import format_wban
+
+def format_wban(str_obj:str) -> None:#NOTE this should be in data_manip 
+    ''' ensures the wban format is of length 5 
+        Args:
+            str_obj: wban to be formated, ex wban = 123, returns 00123
+        Returns:
+            returns the wban regardless of formating 
+    '''
+    if  len(str_obj) < 5: 
+        while len(str_obj) != 5:
+            str_obj = '0' + str_obj
+    return str_obj
 
 def format_str_to_datetime(str_obj:str) -> datetime:
     ''' converts str text containing "yearmonthday" into datetime object 

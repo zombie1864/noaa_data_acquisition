@@ -1,7 +1,9 @@
 import os 
+import gzip 
 import ftplib
 import pathlib 
-import logging 
+import logging
+from typing import Any, Dict, List, Tuple 
 from business_logic.utils_data_manipulation import weather_stations_by
 from business_logic.fileio import CsvReader
 from business_logic.schemas import StationMetadataModel
@@ -81,3 +83,26 @@ def rm_0_byte_files_from(dir:pathlib.Path) -> None:
         file_size = file_path.stat().st_size
         if file_size == 0:
             file_path.unlink()
+
+def num_of_files_in(dir:pathlib.Path) -> int:#NOTE ADD DOC STR 
+    return len([files for files in os.listdir(dir) if os.path.isfile(os.path.join(dir, files))])
+
+
+def retreive_file_content_from(dir:pathlib.Path) -> Any:#NOTE UPDATE DOCS
+    ''' retreives a years worth of data for each weather station in a dir 
+        Args:
+            dir: the dir path to a years worth of data for a given weather station 
+        Returns:
+            list of file content, file content are list of bytes representing line data for a given weather station 
+    '''
+    file_num = 1 
+    file_content_dict = {}
+    this_dir = os.path.dirname(os.path.realpath(__file__))
+    raw_dir = pathlib.Path(this_dir) / 'project_data' / 'raw' 
+    num_of_files = num_of_files_in(raw_dir)
+    for file_path in dir.iterdir():
+        with gzip.open(file_path,'rb') as file_content:
+            file_name = str(file_path)[-20:]
+            file_content_dict[file_name] = {'file_content': (str(file_num),file_content.read().split(b'\n'))}
+        file_num += 1 
+    return (num_of_files, file_content_dict)

@@ -1,65 +1,22 @@
-import gzip 
-import pathlib
 import os
-from typing import Any, Dict, List, TypeVar 
-import pydantic 
-from business_logic.schemas import WeatherStationRecord
-from business_logic.utils_IO_bound import rm_0_byte_files_from
+import pathlib
+from business_logic.utils_IO_bound import rm_0_byte_files_from, retreive_file_content_from
+from business_logic.utils_data_manipulation import weather_station_yealy_data
 
 
 this_dir = os.path.dirname(os.path.realpath(__file__))
 raw_dir = pathlib.Path(this_dir) / 'business_logic' / 'project_data' / 'raw' 
 
 
-PydanticModel = TypeVar('PydanticModel', bound=pydantic.BaseModel)
-
-def _isd_parser_for(file_content:List[bytes]) -> List[PydanticModel]: #NOTE data_manipulation 
-    ''' takes a list of line data from a gz file and converts into list of pydantic model 
-        Args:
-            file_content: list of bytes data in a given gz file 
-        Returns:
-            list of pydantic models 
-    '''
-    list_of_inst_models = []
-    for line_data in file_content[:-1]:
-        str_line_data = line_data.decode('utf-8')
-        dict_obj = {
-            'usaf': str_line_data[4:10],
-            'wban': str_line_data[10:15],
-            'date': str_line_data[15:23],
-            'lat': str_line_data[28:34],
-            'lon': str_line_data[34:41],
-            'air_temp': str_line_data[87:92],
-            'sea_lvl_P': str_line_data[99:104],
-            'dew_point_temp': str_line_data[93:98],
-        }
-        inst_model = WeatherStationRecord(**dict_obj)
-        list_of_inst_models.append(inst_model)
-    return list_of_inst_models
-
-
-def weather_station_yealy_data(dir:pathlib.Path) -> List[List[PydanticModel]]:#NOTE IO_bound
-    ''' 
-        Args:
-            
-        Returns:
-            
-    '''
-    list_of_weather_station_yearly_data = []
-    for file_path in dir.iterdir():
-        with gzip.open(file_path,'rb') as output:
-            file_content = output.read()
-            list_of_inst_models = _isd_parser_for(file_content.split(b'\n'))
-            list_of_weather_station_yearly_data.append(list_of_inst_models)
-
-
+''' this script only contains application logic '''
 def main():
-    rm_0_byte_files_from(raw_dir)
-    list_of_weather_station_yearly_data = weather_station_yealy_data(raw_dir)
-
+    rm_0_byte_files_from(raw_dir) 
+    num_of_files, file_content_dict = retreive_file_content_from(raw_dir) #NOTE slower maybe list comprehension 
+    list_of_weather_station_yearly_data = weather_station_yealy_data(num_of_files, file_content_dict) #NOTE very slow 
 
 if __name__ == '__main__': 
     main() 
+''' NOTE NOTE IMPORTANT TO DOCUMENT THERE CAN ONLY BE ONE LOGGER.INFO, LOGGER.ERROR, LOGGER.WARNING PER SCRIPT BUT YOU CAN HAVE AS MANY PRINT AS YOU WANT  NOTE NOTE '''
 
 
 '''  
