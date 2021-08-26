@@ -21,7 +21,7 @@ def weather_stations_by(start:int, end:int, list_of_models:List[PydanticModel]) 
 ''' cleaning_isd related methods '''
 
 def isd_data_parser(num_of_files: int, dir_content_dict:Dict[str,Tuple[Any]]) -> List[List[PydanticModel]]: 
-    ''' this is a isd parser which translates noaa's isd temperature data into a pydantic model. A parser in general turns a string, binary data, etc. into a data structure. The goal is to return an n dimensional matrix containing a years worth of data as a list of pydantic inst models for a single weather station. [[weather_station_data_1], ..., [weather_station_data_n]]
+    ''' this is an isd parser which translates noaa's isd temperature data into a pydantic model. A parser in general turns a string, binary data, etc. into a data structure. The goal is to return an n dimensional matrix containing a years worth of data as a list of pydantic inst models for a single weather station. [[weather_station_data_1], ..., [weather_station_data_n]]
         Args:
             num_of_files: the total number of files in a dir containg `.gz` files 
             dir_content_dict: py dict containing file_name as key and tuple(file_num, file_content) where file_content is a list of bytes for a given `.gz` file 
