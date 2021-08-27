@@ -110,6 +110,3 @@ def retreive_file_content_from(dir:pathlib.Path) -> Tuple[Any]:
             dir_content_dict[file_name] = (str(file_num),file_content.read().split(b'\n'))
         file_num += 1 
     return (num_of_files, dir_content_dict)
-'''  
-    (int, Dict[file_name,Tuple[file_num, file_content]])
-'''

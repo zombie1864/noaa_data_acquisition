@@ -12,7 +12,7 @@ def main():
     attempts = 1 
     while attempts <= 3: 
         try: 
-            fetch_noaa_ftp_data(2016, 2022, dir_path, csv_filepath) 
+            fetch_noaa_ftp_data(2021, 2022, dir_path, csv_filepath) 
         except ftplib.all_errors: 
             if attempts < 3: 
                 logger.warning('Error accured with FTP connection - reattemping connection')
