@@ -64,7 +64,7 @@ def _aggregation_of_data_to_monthly_avg_for(entry_year_worth_of_data:List[Pydant
         if prev_data_point_entry.date.month == curr_data_point_entry.date.month:
             single_month_worth_of_data.append(curr_data_point_entry)
         else: 
-            avg_for_single_day_inst_model = _data_point_avg_for(single_month_worth_of_data)
+            avg_for_single_day_inst_model = _data_point_avg_for_month(single_month_worth_of_data)
             monthly_avg_records.append(avg_for_single_day_inst_model)
             single_month_worth_of_data = []
     return monthly_avg_records
@@ -88,9 +88,6 @@ def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> Pydanti
         'avg_sea_lvl_P': 0,
         'avg_dew_point_temp': 0,
     }
-    print('\n----------[ START ]----------\n')
-    print(type(avg_for_single_day['date']))
-    print('\n----------[ END ]----------\n') 
     for data_point_entry in single_day_worth_of_data:
         avg_for_single_day['avg_air_temp'] += int(data_point_entry.air_temp)
         avg_for_single_day['avg_sea_lvl_P'] += int(data_point_entry.sea_lvl_P)
@@ -102,6 +99,27 @@ def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> Pydanti
     return avg_for_single_day_inst_model
 
 
+def _data_point_avg_for_month(single_day_worth_of_data:List[PydanticModel]) -> PydanticModel:
+    avg_for_single_day = {
+        'usaf': single_day_worth_of_data[0].usaf,
+        'wban': single_day_worth_of_data[0].wban,
+        'date': single_day_worth_of_data[0].date,
+        'lat': single_day_worth_of_data[0].lat,
+        'lon': single_day_worth_of_data[0].lon,
+        'avg_air_temp': 0,
+        'avg_sea_lvl_P': 0,
+        'avg_dew_point_temp': 0,
+    }
+    for data_point_entry in single_day_worth_of_data:
+        avg_for_single_day['avg_air_temp'] += int(data_point_entry.avg_air_temp)
+        avg_for_single_day['avg_sea_lvl_P'] += int(data_point_entry.avg_sea_lvl_P)
+        avg_for_single_day['avg_dew_point_temp'] += int(data_point_entry.avg_dew_point_temp)
+    avg_for_single_day['avg_air_temp'] = avg_for_single_day['avg_air_temp']/len(single_day_worth_of_data)
+    avg_for_single_day['avg_sea_lvl_P'] = avg_for_single_day['avg_sea_lvl_P']/len(single_day_worth_of_data)
+    avg_for_single_day['avg_dew_point_temp'] = avg_for_single_day['avg_dew_point_temp']/len(single_day_worth_of_data)
+    avg_for_single_day_inst_model = AvgSingleDayRecords(**avg_for_single_day)
+    return avg_for_single_day_inst_model
+
 ''' -------------------------------------------[ method impl ]------------------------------------------- '''
 
 ''' this script only contains application logic '''
@@ -110,8 +128,11 @@ def main():
     num_of_files, dir_content_dict = retreive_file_content_from(raw_dir)
     weather_station_matrix_data = isd_data_parser(num_of_files, dir_content_dict) 
     aggregated_weather_station_data = monthly_data_aggregation_for(weather_station_matrix_data)
+    ''' NOTE it seems like i am getting the right data but before concluding clean up the code and run test to ensure that you are getting the correct data '''
     print('\n----------[ START ]----------\n')
-    print(aggregated_weather_station_data )
+    print(aggregated_weather_station_data[0][0] )
+    print(aggregated_weather_station_data[0][1] )
+    print(aggregated_weather_station_data[0][2] )
     print('\n----------[ END ]----------\n') 
 
 if __name__ == '__main__': 

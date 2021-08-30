@@ -57,7 +57,7 @@ class AvgSingleDayRecords(pydantic.BaseModel):
     ''' avg_for_single_day schema '''
     usaf: str
     wban: str
-    date: str
+    date: datetime
     lat: str
     lon: str
     avg_air_temp: float
