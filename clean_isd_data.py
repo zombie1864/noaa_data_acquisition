@@ -7,7 +7,7 @@ from business_logic.utils_data_manipulation import isd_data_parser
 this_dir = os.path.dirname(os.path.realpath(__file__))
 raw_dir = pathlib.Path(this_dir) / 'business_logic' / 'project_data' / 'raw' 
 
-''' method impl '''
+''' -------------------------------------------[ method impl ]------------------------------------------- '''
 import pydantic 
 from typing import Any, Dict, List, Tuple, TypeVar
 PydanticModel = TypeVar('PydanticModel', bound=pydantic.BaseModel)
@@ -36,10 +36,10 @@ def _aggregate(year_worth_of_data:List[PydanticModel]) -> List[PydanticModel]:
         if prev_data_point_entry.date.day == curr_data_point_entry.date.day:
             single_day_worth_of_data.append(curr_data_point_entry)
         else: 
-            _data_point_avg(single_day_worth_of_data)
+            _data_point_avg_for(single_day_worth_of_data)
 
 
-def _data_point_avg(single_day_worth_of_data:List[PydanticModel]) -> PydanticModel:
+def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> PydanticModel:
     '''this piece of business logic will itr thr a single_day_worth_of_data, sum the air_temp, sea_lvl_P, and dew_point_temp, and divide by the total_num_of_records recorded on a single day -> you will have a py_dict_obj that holds the summarized data for which you need to convert into a pydantic inst model <=> you will need to create another schema, build a convertor method pydantic_converter_of(data:Dict,schema:Type[TPydanticModel]) -> PydanticModel
         Args:
             
@@ -48,7 +48,7 @@ def _data_point_avg(single_day_worth_of_data:List[PydanticModel]) -> PydanticMod
     '''
 
 
-''' method impl '''
+''' -------------------------------------------[ method impl ]------------------------------------------- '''
 
 ''' this script only contains application logic '''
 def main():
