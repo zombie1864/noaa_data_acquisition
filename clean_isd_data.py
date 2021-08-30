@@ -10,6 +10,7 @@ raw_dir = pathlib.Path(this_dir) / 'business_logic' / 'project_data' / 'raw'
 ''' -------------------------------------------[ method impl ]------------------------------------------- '''
 import pydantic 
 from typing import Any, Dict, List, Tuple, TypeVar
+from business_logic.schemas import AvgSingleDayRecords
 PydanticModel = TypeVar('PydanticModel', bound=pydantic.BaseModel)
 def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticModel]]) -> List[List[PydanticModel]]:
     ''' takes in a matrix_data, [[dataset],...,[dataset]], and for each dataset entry aggregates into monthly avg for a year's worth of data, for each dataset in the matrix 
@@ -18,25 +19,31 @@ def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticM
         Returns:
             NOTE NOTE TO BE DETERMINED NOTE NOTE
     '''
-    for year_worth_of_data in weather_station_matrix_data:
-        _aggregate(year_worth_of_data)
+    daily_avg_matrix_data = [_aggregation_of_data_to_day_avg_for(entry_year_worth_of_data) for entry_year_worth_of_data in weather_station_matrix_data]
+    return _aggregation_of_data_to_monthly_avg_for(daily_avg_matrix_data)
 
 
-def _aggregate(year_worth_of_data:List[PydanticModel]) -> List[PydanticModel]:
+def _aggregation_of_data_to_day_avg_for(entry_year_worth_of_data:List[PydanticModel]) -> List[PydanticModel]:
     ''' takes a year's worth of data for a given weather station and aggregates it by monthly avg 
         Args:
-            year_worth_of_data: list of pydantic inst models 
+            entry_year_worth_of_data: list of pydantic inst models 
         Returns:
             NOTE NOTE TO BE DETERMINED NOTE NOTE
     '''
-    for i in range(1,len(year_worth_of_data)):
-        prev_data_point_entry = year_worth_of_data[ i - 1 ] #data_point_entry are inst_model 
-        curr_data_point_entry = year_worth_of_data[i]
-        single_day_worth_of_data = [prev_data_point_entry]
+    single_day_worth_of_data = []
+    day_avg = []
+    for i in range(1,len(entry_year_worth_of_data)):
+        prev_data_point_entry = entry_year_worth_of_data[ i - 1 ] #data_point_entry are inst_model 
+        curr_data_point_entry = entry_year_worth_of_data[i]
+        if len(single_day_worth_of_data) == 0:
+            single_day_worth_of_data.append(prev_data_point_entry)
         if prev_data_point_entry.date.day == curr_data_point_entry.date.day:
             single_day_worth_of_data.append(curr_data_point_entry)
         else: 
-            _data_point_avg_for(single_day_worth_of_data)
+            avg_for_single_day_inst_model = _data_point_avg_for(single_day_worth_of_data)
+            day_avg.append(avg_for_single_day_inst_model)
+            single_day_worth_of_data = []
+    return day_avg
 
 
 def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> PydanticModel:
@@ -46,6 +53,25 @@ def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> Pydanti
         Returns:
             returns a single PydanticModel inst model 
     '''
+    avg_for_single_day = {
+        'usaf': single_day_worth_of_data[0].usaf,
+        'wban': single_day_worth_of_data[0].wban,
+        'date': single_day_worth_of_data[0].date,
+        'lat': single_day_worth_of_data[0].lat,
+        'lon': single_day_worth_of_data[0].lon,
+        'avg_air_temp': 0,
+        'avg_sea_lvl_P': 0,
+        'avg_dew_point_temp': 0,
+    }
+    for data_point_entry in single_day_worth_of_data:
+        avg_for_single_day['avg_air_temp'] += int(data_point_entry.air_temp)
+        avg_for_single_day['avg_sea_lvl_P'] += int(data_point_entry.sea_lvl_P)
+        avg_for_single_day['avg_dew_point_temp'] += int(data_point_entry.dew_point_temp)
+    avg_for_single_day['avg_air_temp'] = avg_for_single_day['avg_air_temp']/len(single_day_worth_of_data)
+    avg_for_single_day['avg_sea_lvl_P'] = avg_for_single_day['avg_sea_lvl_P']/len(single_day_worth_of_data)
+    avg_for_single_day['avg_dew_point_temp'] = avg_for_single_day['avg_dew_point_temp']/len(single_day_worth_of_data)
+    avg_for_single_day_inst_model = AvgSingleDayRecords(**avg_for_single_day)
+    return avg_for_single_day_inst_model
 
 
 ''' -------------------------------------------[ method impl ]------------------------------------------- '''
