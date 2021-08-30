@@ -20,7 +20,7 @@ def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticM
             NOTE NOTE TO BE DETERMINED NOTE NOTE
     '''
     daily_avg_matrix_data = [_aggregation_of_data_to_day_avg_for(entry_year_worth_of_data) for entry_year_worth_of_data in weather_station_matrix_data]
-    return _aggregation_of_data_to_monthly_avg_for(daily_avg_matrix_data)
+    return [_aggregation_of_data_to_monthly_avg_for(entry_year_worth_of_data) for entry_year_worth_of_data in daily_avg_matrix_data]
 
 
 def _aggregation_of_data_to_day_avg_for(entry_year_worth_of_data:List[PydanticModel]) -> List[PydanticModel]:
@@ -28,12 +28,12 @@ def _aggregation_of_data_to_day_avg_for(entry_year_worth_of_data:List[PydanticMo
         Args:
             entry_year_worth_of_data: list of pydantic inst models 
         Returns:
-            NOTE NOTE TO BE DETERMINED NOTE NOTE
+            day_avg: a years worth of data with each entry being the avgerage for a given day 
     '''
     single_day_worth_of_data = []
     day_avg = []
     for i in range(1,len(entry_year_worth_of_data)):
-        prev_data_point_entry = entry_year_worth_of_data[ i - 1 ] #data_point_entry are inst_model 
+        prev_data_point_entry = entry_year_worth_of_data[i - 1] #data_point_entry are inst_model 
         curr_data_point_entry = entry_year_worth_of_data[i]
         if len(single_day_worth_of_data) == 0:
             single_day_worth_of_data.append(prev_data_point_entry)
@@ -46,8 +46,33 @@ def _aggregation_of_data_to_day_avg_for(entry_year_worth_of_data:List[PydanticMo
     return day_avg
 
 
+def _aggregation_of_data_to_monthly_avg_for(entry_year_worth_of_data:List[PydanticModel]) -> List[List[PydanticModel]]:
+    ''' iterates through a years worth of records for a single weather station. Aggregate daily avgerage records into monthly average records. 
+        Args:
+            entry_year_worth_of_data
+        Returns:
+            
+    '''
+    monthly_avg_records = []
+    single_month_worth_of_data = []
+    for i in range(1, len(entry_year_worth_of_data)):
+        prev_data_point_entry = entry_year_worth_of_data[i - 1]
+        curr_data_point_entry = entry_year_worth_of_data[i]
+        ''' 1 1 1 2 2 3 4 '''
+        if len(single_month_worth_of_data) == 0:
+            single_month_worth_of_data.append(prev_data_point_entry)
+        if prev_data_point_entry.date.month == curr_data_point_entry.date.month:
+            single_month_worth_of_data.append(curr_data_point_entry)
+        else: 
+            avg_for_single_day_inst_model = _data_point_avg_for(single_month_worth_of_data)
+            monthly_avg_records.append(avg_for_single_day_inst_model)
+            single_month_worth_of_data = []
+    return monthly_avg_records
+
+
 def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> PydanticModel:
     '''this piece of business logic will itr thr a single_day_worth_of_data, sum the air_temp, sea_lvl_P, and dew_point_temp, and divide by the total_num_of_records recorded on a single day -> you will have a py_dict_obj that holds the summarized data for which you need to convert into a pydantic inst model <=> you will need to create another schema, build a convertor method pydantic_converter_of(data:Dict,schema:Type[TPydanticModel]) -> PydanticModel
+    NOTE NOTE update the doc str NOTE NOTE
         Args:
             
         Returns:
@@ -63,6 +88,9 @@ def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> Pydanti
         'avg_sea_lvl_P': 0,
         'avg_dew_point_temp': 0,
     }
+    print('\n----------[ START ]----------\n')
+    print(type(avg_for_single_day['date']))
+    print('\n----------[ END ]----------\n') 
     for data_point_entry in single_day_worth_of_data:
         avg_for_single_day['avg_air_temp'] += int(data_point_entry.air_temp)
         avg_for_single_day['avg_sea_lvl_P'] += int(data_point_entry.sea_lvl_P)
@@ -82,12 +110,8 @@ def main():
     num_of_files, dir_content_dict = retreive_file_content_from(raw_dir)
     weather_station_matrix_data = isd_data_parser(num_of_files, dir_content_dict) 
     aggregated_weather_station_data = monthly_data_aggregation_for(weather_station_matrix_data)
-    sample_data = weather_station_matrix_data[0][0]
     print('\n----------[ START ]----------\n')
-    print( sample_data.date ) #=> 2021-01-01 00:00:00
-    print( type(sample_data.date) ) #=> <class 'datetime.datetime'>
-    print( sample_data.date.day ) #=> 1 
-    print( type(sample_data.date.day) ) #=> <class 'int'>
+    print(aggregated_weather_station_data )
     print('\n----------[ END ]----------\n') 
 
 if __name__ == '__main__': 
