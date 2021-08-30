@@ -12,6 +12,8 @@ import pydantic
 from typing import Any, Dict, List, Tuple, TypeVar
 from business_logic.schemas import AvgSingleDayRecords
 PydanticModel = TypeVar('PydanticModel', bound=pydantic.BaseModel)
+
+
 def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticModel]]) -> List[List[PydanticModel]]:
     ''' takes in a matrix_data, [[dataset],...,[dataset]], and for each dataset entry aggregates into monthly avg for a year's worth of data, for each dataset in the matrix 
         Args:
@@ -20,6 +22,7 @@ def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticM
             NOTE NOTE TO BE DETERMINED NOTE NOTE
     '''
     daily_avg_matrix_data = [_aggregation_of_data_to_day_avg_for(entry_year_worth_of_data) for entry_year_worth_of_data in weather_station_matrix_data]
+
     return [_aggregation_of_data_to_monthly_avg_for(entry_year_worth_of_data) for entry_year_worth_of_data in daily_avg_matrix_data]
 
 
@@ -40,7 +43,7 @@ def _aggregation_of_data_to_day_avg_for(entry_year_worth_of_data:List[PydanticMo
         if prev_data_point_entry.date.day == curr_data_point_entry.date.day:
             single_day_worth_of_data.append(curr_data_point_entry)
         else: 
-            avg_for_single_day_inst_model = _data_point_avg_for(single_day_worth_of_data)
+            avg_for_single_day_inst_model = _data_point_avg_for(single_day_worth_of_data,'air_temp', 'sea_lvl_P', 'dew_point_temp')
             day_avg.append(avg_for_single_day_inst_model)
             single_day_worth_of_data = []
     return day_avg
@@ -58,19 +61,18 @@ def _aggregation_of_data_to_monthly_avg_for(entry_year_worth_of_data:List[Pydant
     for i in range(1, len(entry_year_worth_of_data)):
         prev_data_point_entry = entry_year_worth_of_data[i - 1]
         curr_data_point_entry = entry_year_worth_of_data[i]
-        ''' 1 1 1 2 2 3 4 '''
         if len(single_month_worth_of_data) == 0:
             single_month_worth_of_data.append(prev_data_point_entry)
         if prev_data_point_entry.date.month == curr_data_point_entry.date.month:
             single_month_worth_of_data.append(curr_data_point_entry)
         else: 
-            avg_for_single_day_inst_model = _data_point_avg_for_month(single_month_worth_of_data)
+            avg_for_single_day_inst_model = _data_point_avg_for(single_month_worth_of_data,'avg_air_temp', 'avg_sea_lvl_P', 'avg_dew_point_temp')
             monthly_avg_records.append(avg_for_single_day_inst_model)
             single_month_worth_of_data = []
     return monthly_avg_records
 
 
-def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> PydanticModel:
+def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel], first_key:str, second_key: str, third_key:str) -> PydanticModel:
     '''this piece of business logic will itr thr a single_day_worth_of_data, sum the air_temp, sea_lvl_P, and dew_point_temp, and divide by the total_num_of_records recorded on a single day -> you will have a py_dict_obj that holds the summarized data for which you need to convert into a pydantic inst model <=> you will need to create another schema, build a convertor method pydantic_converter_of(data:Dict,schema:Type[TPydanticModel]) -> PydanticModel
     NOTE NOTE update the doc str NOTE NOTE
         Args:
@@ -89,31 +91,9 @@ def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel]) -> Pydanti
         'avg_dew_point_temp': 0,
     }
     for data_point_entry in single_day_worth_of_data:
-        avg_for_single_day['avg_air_temp'] += int(data_point_entry.air_temp)
-        avg_for_single_day['avg_sea_lvl_P'] += int(data_point_entry.sea_lvl_P)
-        avg_for_single_day['avg_dew_point_temp'] += int(data_point_entry.dew_point_temp)
-    avg_for_single_day['avg_air_temp'] = avg_for_single_day['avg_air_temp']/len(single_day_worth_of_data)
-    avg_for_single_day['avg_sea_lvl_P'] = avg_for_single_day['avg_sea_lvl_P']/len(single_day_worth_of_data)
-    avg_for_single_day['avg_dew_point_temp'] = avg_for_single_day['avg_dew_point_temp']/len(single_day_worth_of_data)
-    avg_for_single_day_inst_model = AvgSingleDayRecords(**avg_for_single_day)
-    return avg_for_single_day_inst_model
-
-
-def _data_point_avg_for_month(single_day_worth_of_data:List[PydanticModel]) -> PydanticModel:
-    avg_for_single_day = {
-        'usaf': single_day_worth_of_data[0].usaf,
-        'wban': single_day_worth_of_data[0].wban,
-        'date': single_day_worth_of_data[0].date,
-        'lat': single_day_worth_of_data[0].lat,
-        'lon': single_day_worth_of_data[0].lon,
-        'avg_air_temp': 0,
-        'avg_sea_lvl_P': 0,
-        'avg_dew_point_temp': 0,
-    }
-    for data_point_entry in single_day_worth_of_data:
-        avg_for_single_day['avg_air_temp'] += int(data_point_entry.avg_air_temp)
-        avg_for_single_day['avg_sea_lvl_P'] += int(data_point_entry.avg_sea_lvl_P)
-        avg_for_single_day['avg_dew_point_temp'] += int(data_point_entry.avg_dew_point_temp)
+        avg_for_single_day['avg_air_temp'] += int(getattr(data_point_entry, first_key))
+        avg_for_single_day['avg_sea_lvl_P'] += int(getattr(data_point_entry, second_key))
+        avg_for_single_day['avg_dew_point_temp'] += int(getattr(data_point_entry, third_key))
     avg_for_single_day['avg_air_temp'] = avg_for_single_day['avg_air_temp']/len(single_day_worth_of_data)
     avg_for_single_day['avg_sea_lvl_P'] = avg_for_single_day['avg_sea_lvl_P']/len(single_day_worth_of_data)
     avg_for_single_day['avg_dew_point_temp'] = avg_for_single_day['avg_dew_point_temp']/len(single_day_worth_of_data)
