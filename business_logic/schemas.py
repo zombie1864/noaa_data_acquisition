@@ -67,7 +67,7 @@ class AvgSingleDayRecords(pydantic.BaseModel):
 
 
 class AvgMonthlyRecords(pydantic.BaseModel):
-    ''' avg_for_single_day schema '''
+    ''' avg_for_month schema '''
     usaf: str
     wban: str
     date: datetime
