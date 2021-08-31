@@ -1,5 +1,6 @@
 import pytest 
 import pydantic 
+import csv 
 from business_logic.schemas import format_str_to_datetime, format_wban
 
 @pytest.fixture
@@ -10,10 +11,46 @@ def mock_csv_data():
     ]
 
 @pytest.fixture
-def mock_csv_file(tmp_path, mock_csv_data):
+def list_of_inst_models(csv_schema):
+    dict_obj = {
+        'USAF': '1234',
+        'WBAN': '00005',
+        'STATION NAME': 'demo_station',
+        'CTRY': 'USA',
+        'STATE': 'NY',
+        'ICAO': 'icao',
+        'LAT': '1.23',
+        'LON': '-4.56',
+        'ELEV(M)': '123',
+        'BEGIN': '19890218',
+        'END': '20210823',
+
+    }
+    return [csv_schema(**dict_obj)]
+
+@pytest.fixture
+def mock_csv_file_path(tmp_path, mock_csv_data):
     file_path = tmp_path / "file.csv"
     file_path.write_text("\n".join(mock_csv_data))
     return file_path
+
+
+@pytest.fixture 
+def csv_schema():
+    class CsvSchema(pydantic.BaseModel):
+        USAF: str
+        WBAN: str
+        STATION_NAME: str = pydantic.Field(..., alias='STATION NAME')
+        CTRY: str
+        STATE: str
+        ICAO: str
+        LAT: str
+        LON: str
+        ELEV: str = pydantic.Field(..., alias='ELEV(M)')
+        BEGIN: str
+        END: str
+    return CsvSchema
+
 
 @pytest.fixture 
 def list_of_weather_station_models():

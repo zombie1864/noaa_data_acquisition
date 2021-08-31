@@ -10,7 +10,6 @@ flexibility.
 import pydantic
 import abc 
 import pathlib
-import json 
 import csv 
 from typing import List, Type, TypeVar
 
@@ -52,7 +51,7 @@ class PydanticWriter(abc.ABC):
 
 class JsonWriter(PydanticWriter):
     def write(self, data: List[TPydanticModel], filepath: pathlib.Path) -> None:
-        """Given some data as a list of PydanticModels, writes to a file. 
+        """Given a list of PydanticModels, writes to a json file. 
 
         Args:
             data (List[TPydanticModel]): A list of pydantic models to write 
@@ -66,8 +65,7 @@ class JsonWriter(PydanticWriter):
 
 class CsvReader(PydanticReader):
     def read(self, filepath: pathlib.Path, model_class: Type[TPydanticModel]) -> List[TPydanticModel]:
-        """Given a valid pathlib.Path and a pydantic model class, read in a file and return a list of pydantic model instances 
-        of the given type.
+        """Given a valid pathlib.Path and a pydantic model class, read in a file and return a list of pydantic model instances of the given type.
 
         Args:
             filepath (pathlib.Path): path to some file 
