@@ -53,7 +53,20 @@ class WeatherStationRecord(pydantic.BaseModel):
     dew_point_temp: str
     date_validation = pydantic.validator('date', allow_reuse=True)(format_str_to_datetime)
 
+
 class AvgSingleDayRecords(pydantic.BaseModel):
+    ''' avg_for_single_day schema '''
+    usaf: str
+    wban: str
+    date: datetime
+    lat: str
+    lon: str
+    avg_air_temp: float
+    avg_sea_lvl_P: float
+    avg_dew_point_temp: float
+
+
+class AvgRecords(pydantic.BaseModel):
     ''' avg_for_single_day schema '''
     usaf: str
     wban: str

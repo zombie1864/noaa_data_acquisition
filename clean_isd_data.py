@@ -19,57 +19,34 @@ def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticM
         Args:
             weather_station_matrix_data: list containing a year's worth of data as pydantic models 
         Returns:
-            NOTE NOTE TO BE DETERMINED NOTE NOTE
+            A matrix data with each dataset entry containing avgerage values for each month per weather station 
     '''
-    daily_avg_matrix_data = [_aggregation_of_data_to_day_avg_for(entry_year_worth_of_data) for entry_year_worth_of_data in weather_station_matrix_data]
+    daily_avg_matrix_data = [_aggregation_of_data_for(entry_year_worth_of_data, 'air_temp', 'sea_lvl_P', 'dew_point_temp') for entry_year_worth_of_data in weather_station_matrix_data]
 
-    return [_aggregation_of_data_to_monthly_avg_for(entry_year_worth_of_data) for entry_year_worth_of_data in daily_avg_matrix_data]
+    return [_aggregation_of_data_for(entry_year_worth_of_data, 'avg_air_temp', 'avg_sea_lvl_P', 'avg_dew_point_temp') for entry_year_worth_of_data in daily_avg_matrix_data]
 
 
-def _aggregation_of_data_to_day_avg_for(entry_year_worth_of_data:List[PydanticModel]) -> List[PydanticModel]:
-    ''' takes a year's worth of data for a given weather station and aggregates it by monthly avg 
+def _aggregation_of_data_for(entry_year_worth_of_data:List[PydanticModel], param_1:str, param_2:str, param_3:str) -> List[List[PydanticModel]]:
+    ''' Aggregation of data specifically for air_temp, sea_lvl_P, and dew_point_temp 
         Args:
-            entry_year_worth_of_data: list of pydantic inst models 
-        Returns:
-            day_avg: a years worth of data with each entry being the avgerage for a given day 
-    '''
-    single_day_worth_of_data = []
-    day_avg = []
-    for i in range(1,len(entry_year_worth_of_data)):
-        prev_data_point_entry = entry_year_worth_of_data[i - 1] #data_point_entry are inst_model 
-        curr_data_point_entry = entry_year_worth_of_data[i]
-        if len(single_day_worth_of_data) == 0:
-            single_day_worth_of_data.append(prev_data_point_entry)
-        if prev_data_point_entry.date.day == curr_data_point_entry.date.day:
-            single_day_worth_of_data.append(curr_data_point_entry)
-        else: 
-            avg_for_single_day_inst_model = _data_point_avg_for(single_day_worth_of_data,'air_temp', 'sea_lvl_P', 'dew_point_temp')
-            day_avg.append(avg_for_single_day_inst_model)
-            single_day_worth_of_data = []
-    return day_avg
-
-
-def _aggregation_of_data_to_monthly_avg_for(entry_year_worth_of_data:List[PydanticModel]) -> List[List[PydanticModel]]:
-    ''' iterates through a years worth of records for a single weather station. Aggregate daily avgerage records into monthly average records. 
-        Args:
-            entry_year_worth_of_data
+            
         Returns:
             
     '''
-    monthly_avg_records = []
-    single_month_worth_of_data = []
+    aggregated_dataset = []
+    tmp_dataset_container = []
     for i in range(1, len(entry_year_worth_of_data)):
         prev_data_point_entry = entry_year_worth_of_data[i - 1]
         curr_data_point_entry = entry_year_worth_of_data[i]
-        if len(single_month_worth_of_data) == 0:
-            single_month_worth_of_data.append(prev_data_point_entry)
+        if len(tmp_dataset_container) == 0:
+            tmp_dataset_container.append(prev_data_point_entry)
         if prev_data_point_entry.date.month == curr_data_point_entry.date.month:
-            single_month_worth_of_data.append(curr_data_point_entry)
+            tmp_dataset_container.append(curr_data_point_entry)
         else: 
-            avg_for_single_day_inst_model = _data_point_avg_for(single_month_worth_of_data,'avg_air_temp', 'avg_sea_lvl_P', 'avg_dew_point_temp')
-            monthly_avg_records.append(avg_for_single_day_inst_model)
-            single_month_worth_of_data = []
-    return monthly_avg_records
+            avg_for_single_day_inst_model = _data_point_avg_for(tmp_dataset_container,param_1, param_2, param_3)
+            aggregated_dataset.append(avg_for_single_day_inst_model)
+            tmp_dataset_container = []
+    return aggregated_dataset
 
 
 def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel], first_key:str, second_key: str, third_key:str) -> PydanticModel:
@@ -109,11 +86,7 @@ def main():
     weather_station_matrix_data = isd_data_parser(num_of_files, dir_content_dict) 
     aggregated_weather_station_data = monthly_data_aggregation_for(weather_station_matrix_data)
     ''' NOTE it seems like i am getting the right data but before concluding clean up the code and run test to ensure that you are getting the correct data '''
-    print('\n----------[ START ]----------\n')
-    print(aggregated_weather_station_data[0][0] )
-    print(aggregated_weather_station_data[0][1] )
-    print(aggregated_weather_station_data[0][2] )
-    print('\n----------[ END ]----------\n') 
+
 
 if __name__ == '__main__': 
     main() 
