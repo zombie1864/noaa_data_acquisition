@@ -21,12 +21,12 @@ def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticM
         Returns:
             A matrix data with each dataset entry containing avgerage values for each month per weather station 
     '''
-    daily_avg_matrix_data = [_aggregation_of_data_for(entry_year_worth_of_data, AvgSingleDayRecords,'air_temp', 'sea_lvl_P', 'dew_point_temp') for entry_year_worth_of_data in weather_station_matrix_data]
+    daily_avg_matrix_data = [_aggregation_of_data_for(entry_year_worth_of_data, 'day', AvgSingleDayRecords,'air_temp', 'sea_lvl_P', 'dew_point_temp') for entry_year_worth_of_data in weather_station_matrix_data]
 
-    return [_aggregation_of_data_for(entry_year_worth_of_data, AvgMonthlyRecords, 'air_temp', 'sea_lvl_P', 'dew_point_temp') for entry_year_worth_of_data in daily_avg_matrix_data]
+    return [_aggregation_of_data_for(entry_year_worth_of_data, 'month', AvgMonthlyRecords, 'avg_air_temp', 'avg_sea_lvl_P', 'avg_dew_point_temp') for entry_year_worth_of_data in daily_avg_matrix_data]
 
 
-def _aggregation_of_data_for(entry_year_worth_of_data:List[PydanticModel], schema, *params:str) -> List[List[PydanticModel]]:
+def _aggregation_of_data_for(entry_year_worth_of_data:List[PydanticModel], time, schema, *params:str) -> List[List[PydanticModel]]:
     ''' Aggregation of data specifically for air_temp, sea_lvl_P, and dew_point_temp 
         Args:
             
@@ -40,7 +40,7 @@ def _aggregation_of_data_for(entry_year_worth_of_data:List[PydanticModel], schem
         curr_data_point_entry = entry_year_worth_of_data[i]
         if len(tmp_dataset_container) == 0:
             tmp_dataset_container.append(prev_data_point_entry)
-        if prev_data_point_entry.date.month == curr_data_point_entry.date.month:
+        if getattr(prev_data_point_entry.date,time) == getattr(curr_data_point_entry.date,time):
             tmp_dataset_container.append(curr_data_point_entry)
         else: 
             avg_for_single_day_inst_model = _data_point_avg_for(tmp_dataset_container,schema,*params)
@@ -67,7 +67,7 @@ def _data_point_avg_for(single_day_worth_of_data:List[PydanticModel], schema, *p
     for data_point_entry in single_day_worth_of_data:
         for param in params:
             if param not in tmp_record.keys():
-                tmp_record[param] = 0
+                tmp_record[param] = int(getattr(data_point_entry, param))
             else: 
                 tmp_record[param] += int(getattr(data_point_entry, param)) 
     for param in params:
