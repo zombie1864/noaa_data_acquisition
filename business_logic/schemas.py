@@ -61,18 +61,18 @@ class AvgSingleDayRecords(pydantic.BaseModel):
     date: datetime
     lat: str
     lon: str
-    avg_air_temp: float
-    avg_sea_lvl_P: float
-    avg_dew_point_temp: float
+    avg_air_temp: float = pydantic.Field(..., alias='air_temp')
+    avg_sea_lvl_P: float = pydantic.Field(..., alias='sea_lvl_P')
+    avg_dew_point_temp: float = pydantic.Field(..., alias='dew_point_temp')
 
 
-class AvgRecords(pydantic.BaseModel):
+class AvgMonthlyRecords(pydantic.BaseModel):
     ''' avg_for_single_day schema '''
     usaf: str
     wban: str
     date: datetime
     lat: str
     lon: str
-    avg_air_temp: float
-    avg_sea_lvl_P: float
-    avg_dew_point_temp: float
+    avg_air_temp: float = pydantic.Field(..., alias='air_temp')
+    avg_sea_lvl_P: float = pydantic.Field(..., alias='sea_lvl_P')
+    avg_dew_point_temp: float = pydantic.Field(..., alias='dew_point_temp')

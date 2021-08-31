@@ -3,7 +3,7 @@
 *.json
 !fixtures/*.json
 
-!tempCodeRunnerFile.py
+tempCodeRunnerFile.py
 
 notebooks/
 init-fixtures-aws.sh
