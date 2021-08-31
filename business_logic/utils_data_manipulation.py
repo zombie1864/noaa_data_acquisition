@@ -1,11 +1,11 @@
 import pydantic 
 from typing import Any, Dict, List, Tuple, TypeVar
-from business_logic.schemas import WeatherStationRecord
+from business_logic.schemas import WeatherStationRecord, AvgSingleDayRecords, AvgMonthlyRecords
 
 
 PydanticModel = TypeVar('PydanticModel', bound=pydantic.BaseModel)
 
-''' fetch_ftp related methods '''
+''' -----------------------------[ fetch_ftp related methods ]----------------------------- '''
 
 def weather_stations_by(start:int, end:int, list_of_models:List[PydanticModel]) -> List[str]: 
     '''  performs a filtering of pydantic models that encapudalte the starting year, years gte start and years lte start and returns a list of str representing weather stations 
@@ -18,7 +18,7 @@ def weather_stations_by(start:int, end:int, list_of_models:List[PydanticModel]) 
     return [model.USAF + '-' + model.WBAN for model in list_of_models if model.BEGIN.year <= start and model.END.year == end - 1]
 
             
-''' cleaning_isd related methods '''
+''' -----------------------------[ cleaning_isd related methods ]----------------------------- '''
 
 def isd_data_parser(num_of_files: int, dir_content_dict:Dict[str,Tuple[Any]]) -> List[List[PydanticModel]]: 
     ''' this is an isd parser which translates noaa's isd temperature data into a pydantic model. A parser in general turns a string, binary data, etc. into a data structure. The goal is to return an n dimensional matrix containing a years worth of data as a list of pydantic inst models for a single weather station. [[weather_station_data_1], ..., [weather_station_data_n]]
@@ -57,3 +57,69 @@ def _isd_parser_for(file_name:str, file_content_tuple:Tuple[str,List[bytes]], nu
         } 
         year_worth_of_weather_station_data.append(WeatherStationRecord(**dict_obj))
     return year_worth_of_weather_station_data
+
+
+def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticModel]]) -> List[List[PydanticModel]]:
+    ''' takes in a matrix_data, [[dataset],...,[dataset]], and for each dataset entry aggregates into monthly avg for a year's worth of data, for each dataset in the matrix 
+        Args:
+            weather_station_matrix_data: list containing a year's worth of data as pydantic models 
+        Returns:
+            A matrix data with each dataset entry containing avgerage values for each month per weather station 
+    '''
+    daily_avg_matrix_data = [_aggregation_of_data_for(entry_year_worth_of_data, 'day', AvgSingleDayRecords,'air_temp', 'sea_lvl_P', 'dew_point_temp') for entry_year_worth_of_data in weather_station_matrix_data]
+
+    return [_aggregation_of_data_for(entry_year_worth_of_data, 'month', AvgMonthlyRecords, 'avg_air_temp', 'avg_sea_lvl_P', 'avg_dew_point_temp') for entry_year_worth_of_data in daily_avg_matrix_data]
+
+
+def _aggregation_of_data_for(list_of_inst_models:List[PydanticModel], time:str, schema:PydanticModel, *params:str) -> List[List[PydanticModel]]:
+    ''' Aggregation of data according to datetime-time specification. Example: aggregation of data according to day or according to month 
+        Args:
+            list_of_inst_models: list of pydantic models 
+            time: specifies how the aggregation of data will be identified by. Days, months, etc... 
+            schema: pydantic schema 
+            params: additional params that is used to create aggregation variables 
+        Returns:
+            aggregated_dataset
+    '''
+    aggregated_dataset = []
+    tmp_dataset_container = []
+    for i in range(1, len(list_of_inst_models)):
+        prev_data_point_entry = list_of_inst_models[i - 1]
+        curr_data_point_entry = list_of_inst_models[i]
+        if len(tmp_dataset_container) == 0:
+            tmp_dataset_container.append(prev_data_point_entry)
+        if getattr(prev_data_point_entry.date, time) == getattr(curr_data_point_entry.date, time):
+            tmp_dataset_container.append(curr_data_point_entry)
+        else: 
+            avg_for_single_day_inst_model = _data_point_avg_for(tmp_dataset_container,schema,*params)
+            aggregated_dataset.append(avg_for_single_day_inst_model)
+            tmp_dataset_container = []
+    return aggregated_dataset
+
+
+def _data_point_avg_for(list_of_inst_models:List[PydanticModel], schema:PydanticModel, *params:str) -> PydanticModel:
+    '''performs the creation of key-value pair and averaging of params of interest 
+        Args:
+            list_of_inst_models: list of pydantic models 
+            schema: pydantic schema 
+            params: additional params that is used to create aggregation variables 
+        Returns:
+            avg_inst_model
+    '''
+    tmp_record = {
+        'usaf': list_of_inst_models[0].usaf,
+        'wban': list_of_inst_models[0].wban,
+        'date': list_of_inst_models[0].date,
+        'lat': list_of_inst_models[0].lat,
+        'lon': list_of_inst_models[0].lon,
+    }
+    for data_point_entry in list_of_inst_models:
+        for param in params:
+            if param not in tmp_record.keys():
+                tmp_record[param] = int(getattr(data_point_entry, param))
+            else: 
+                tmp_record[param] += int(getattr(data_point_entry, param)) 
+    for param in params:
+        tmp_record[param] = tmp_record[param] / len(list_of_inst_models)
+    avg_inst_model = schema(**tmp_record)
+    return avg_inst_model
