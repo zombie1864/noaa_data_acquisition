@@ -4,7 +4,7 @@ import json
 from unittest import mock
 from ..schemas import format_wban
 from ..utils_data_manipulation import weather_stations_by
-from ..utils_IO_bound import fetch_noaa_ftp_data, _fetch_files
+from ..utils_file_IO import fetch_noaa_ftp_data, _fetch_files
 from ..schemas import StationMetadataModel
 from ..fileio import CsvReader, JsonWriter
 from unittest import mock
