@@ -52,8 +52,6 @@ def _isd_parser_for(file_name:str, file_content_tuple:Tuple[str,List[bytes]], nu
             'lat': str_line_data[28:34],
             'lon': str_line_data[34:41],
             'air_temp': str_line_data[87:92],
-            'sea_lvl_P': str_line_data[99:104],
-            'dew_point_temp': str_line_data[93:98],
         } 
         year_worth_of_weather_station_data.append(WeatherStationRecord(**dict_obj))
     return year_worth_of_weather_station_data
@@ -67,9 +65,9 @@ def monthly_data_aggregation_for(weather_station_matrix_data:List[List[PydanticM
             A matrix data one with each dataset entry containing avgerage values for each month per weather station
             [[avg_for_jan],...,[avg_for_dec]]
     '''
-    daily_avg_matrix_data = [ _aggregation_of_data_for(entry_year_worth_of_data, 'day', AvgSingleDayRecords,'air_temp', 'sea_lvl_P', 'dew_point_temp') for entry_year_worth_of_data in weather_station_matrix_data]
+    daily_avg_matrix_data = [ _aggregation_of_data_for(entry_year_worth_of_data, 'day', AvgSingleDayRecords,'air_temp') for entry_year_worth_of_data in weather_station_matrix_data]
 
-    return [_aggregation_of_data_for(daily_avg_year_worth_of_data, 'month', AvgMonthlyRecords, 'avg_air_temp', 'avg_sea_lvl_P', 'avg_dew_point_temp') for daily_avg_year_worth_of_data in daily_avg_matrix_data]
+    return [_aggregation_of_data_for(daily_avg_year_worth_of_data, 'month', AvgMonthlyRecords, 'avg_air_temp') for daily_avg_year_worth_of_data in daily_avg_matrix_data]
 
 
 def _aggregation_of_data_for(list_of_inst_models:List[PydanticModel], time:str, schema:PydanticModel, *params:str) -> List[List[PydanticModel]]:
@@ -122,5 +120,16 @@ def _data_point_avg_for(list_of_inst_models:List[PydanticModel], schema:Pydantic
                 tmp_record[param] += int(getattr(data_point_entry, param)) 
     for param in params:
         tmp_record[param] = tmp_record[param] / len(list_of_inst_models)
+        if param == 'air_temp': 
+            tmp_record[param] = tmp_record[param] / 10
     avg_inst_model = schema(**tmp_record)
     return avg_inst_model
+
+def rm_0_len_weather_station_data_for(aggregated_weather_station_data:List[List[PydanticModel]]) -> List[List[PydanticModel]]: 
+    ''' returns a filtered aggregated weather station data in which elements in the matrix data of lenth zero are removed
+        Args:
+            aggregated_weather_station_data: A matrix data 
+        Returns:
+            A matrix data in which elements of length zero are removed 
+    '''
+    return [weather_station for weather_station in aggregated_weather_station_data if len(weather_station) != 0]

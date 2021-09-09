@@ -3,14 +3,16 @@ import gzip
 import ftplib
 import pathlib 
 import logging
-from typing import Any, Dict, List, Tuple 
+import pydantic 
+from typing import Any, List, Tuple, TypeVar
 from business_logic.utils_data_manipulation import weather_stations_by
-from business_logic.fileio import CsvReader
+from business_logic.fileio import CsvReader, JsonWriter
 from business_logic.schemas import StationMetadataModel
 
 logger = logging.getLogger(__name__)
+PydanticModel = TypeVar('PydanticModel', bound=pydantic.BaseModel)
 
-''' fetch_ftp related methods '''
+''' -----------------------------[ fetch_ftp related methods ]----------------------------- '''
 
 def fetch_noaa_ftp_data(start:int, end:int, dir_path:pathlib.Path, csv_filepath:pathlib.Path) -> None: 
     ''' access noaa's ftp server and write to memory all years for each station from start to end  
@@ -70,7 +72,7 @@ def _fetch_files(ftp_server:str, ftp_dir:str, file_name:str, dir_path:pathlib.Pa
                 logger.error(f'{file_name} not found')
         ftp.quit()
 
-''' cleaning_isd related methods '''
+''' -----------------------------[ cleaning_isd related methods ]----------------------------- '''
 
 def rm_0_byte_files_from(dir:pathlib.Path) -> None: 
     ''' iterates through a given dir and removes 0 byte files
@@ -110,3 +112,17 @@ def retreive_file_content_from(dir:pathlib.Path) -> Tuple[Any]:
             dir_content_dict[file_name] = (str(file_num),file_content.read().split(b'\n'))
         file_num += 1 
     return (num_of_files, dir_content_dict)
+
+def save_data_to_json_files_for(aggregated_weather_station_data:List[List[PydanticModel]], dir_path:pathlib.Path) -> None:
+    ''' iterates through aggregated_weather_station_data and for each entry creates its own readable json file 
+        Args:
+            aggregated_weather_station_data: A matrix data 
+        Returns:
+            None 
+    '''
+    if not dir_path.exists():
+        dir_path.mkdir()
+    for weather_station_data in aggregated_weather_station_data:
+        usaf, wban = weather_station_data[0].usaf, weather_station_data[0].wban
+        file_path = dir_path / f'{usaf}-{wban}.json'
+        JsonWriter().write(weather_station_data, file_path)

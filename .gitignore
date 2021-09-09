@@ -4,6 +4,7 @@
 !fixtures/*.json
 
 tempCodeRunnerFile.py
+dev_log.py
 
 notebooks/
 init-fixtures-aws.sh

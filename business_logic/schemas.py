@@ -49,8 +49,6 @@ class WeatherStationRecord(pydantic.BaseModel):
     lat: str
     lon: str
     air_temp: str
-    sea_lvl_P: str
-    dew_point_temp: str
     date_validation = pydantic.validator('date', allow_reuse=True)(format_str_to_datetime)
 
 
@@ -62,8 +60,6 @@ class AvgSingleDayRecords(pydantic.BaseModel):
     lat: str
     lon: str
     avg_air_temp: float = pydantic.Field(..., alias='air_temp')
-    avg_sea_lvl_P: float = pydantic.Field(..., alias='sea_lvl_P')
-    avg_dew_point_temp: float = pydantic.Field(..., alias='dew_point_temp')
 
 
 class AvgMonthlyRecords(pydantic.BaseModel):
@@ -74,5 +70,3 @@ class AvgMonthlyRecords(pydantic.BaseModel):
     lat: str
     lon: str
     avg_air_temp: float 
-    avg_sea_lvl_P: float 
-    avg_dew_point_temp: float 
